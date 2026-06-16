@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('admission_no');
             $table->foreignId('class_group_id')->nullable()->constrained('class_groups')->nullOnDelete();
+            $table->foreignId('class_id')->nullable()->constrained('standards')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });

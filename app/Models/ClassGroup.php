@@ -12,22 +12,26 @@ class ClassGroup extends Model
 
     protected $fillable = [
         'name',
-        'description',
+        'head_teacher_id',
     ];
 
-    /**
-     * Get the students that belong to this class group.
-     */
     public function students()
     {
         return $this->hasMany(Student::class);
     }
 
-    /**
-     * Get the users that belong to this class group.
-     */
     public function users()
     {
         return $this->hasMany(User::class);
+    }
+
+    public function standards()
+    {
+        return $this->hasMany(Standard::class, 'classgroup_id');
+    }
+
+    public function headTeacher()
+    {
+        return $this->belongsTo(Teacher::class, 'head_teacher_id');
     }
 }

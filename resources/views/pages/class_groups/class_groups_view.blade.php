@@ -22,7 +22,8 @@
                             <tr>
                                 <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">#</th>
                                 <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
-                                {{-- <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th> --}}
+                                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Head Teacher</th>
+                                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Classes</th>
                                 <th class="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
@@ -31,7 +32,16 @@
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors" data-id="{{ $row->id }}">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $index + 1 }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-white">{{ $row->name }}</td>
-                                    {{-- <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ $row->description ?? '—' }}</td> --}}
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                        {{ $row->headTeacher->name ?? '—' }}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                                        @if($row->standards->count())
+                                            {{ $row->standards->pluck('name')->join(', ') }}
+                                        @else
+                                            <span class="text-gray-400">—</span>
+                                        @endif
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right">
                                         <div class="flex items-center justify-end gap-2">
                                             <button type="button"
@@ -49,7 +59,7 @@
                                 </tr>
                             @empty
                                 <tr id="emptyRow">
-                                    <td colspan="4" class="px-6 py-12 text-center">
+                                    <td colspan="5" class="px-6 py-12 text-center">
                                         <div class="flex flex-col items-center">
                                             <i class="fas fa-layer-group text-4xl text-gray-300 dark:text-gray-600 mb-3"></i>
                                             <p class="text-gray-500 dark:text-gray-400 font-medium">No class groups found</p>
@@ -93,18 +103,22 @@
                             </label>
                             <input type="text" id="name" name="name"
                                 class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent px-4 text-sm text-gray-800 dark:text-white placeholder:text-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:bg-gray-900 transition-colors"
-                                placeholder="e.g. Class 10-A">
+                                placeholder="e.g. Primary Group">
                             <p id="nameError" class="mt-1 text-xs text-red-500 hidden"></p>
                         </div>
-                        {{-- <div>
-                            <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                Description
+                        <div>
+                            <label for="head_teacher_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                Head Teacher
                             </label>
-                            <textarea id="description" name="description" rows="3"
-                                class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent px-4 py-2.5 text-sm text-gray-800 dark:text-white placeholder:text-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:bg-gray-900 transition-colors resize-none"
-                                placeholder="Enter description (optional)"></textarea>
-                            <p id="descriptionError" class="mt-1 text-xs text-red-500 hidden"></p>
-                        </div> --}}
+                            <select id="head_teacher_id" name="head_teacher_id"
+                                class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent px-4 text-sm text-gray-800 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:bg-gray-900 transition-colors">
+                                <option value="">No head teacher</option>
+                                @foreach ($teachers as $teacher)
+                                    <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
+                                @endforeach
+                            </select>
+                            <p id="head_teacher_idError" class="mt-1 text-xs text-red-500 hidden"></p>
+                        </div>
                     </div>
                     <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
                         <button type="button" id="btnCancel"
@@ -196,7 +210,7 @@
                         if (res.success) {
                             $('#recordId').val(res.data.id);
                             $('#name').val(res.data.name);
-                            $('#description').val(res.data.description);
+                            $('#head_teacher_id').val(res.data.head_teacher_id);
                             openModal('Edit Class Group');
                         }
                     },
@@ -223,7 +237,7 @@
                     data: {
                         _token: CSRF_TOKEN,
                         name: $('#name').val(),
-                        description: $('#description').val(),
+                        head_teacher_id: $('#head_teacher_id').val(),
                     },
                     success: function (res) {
                         if (res.success) {
@@ -262,7 +276,7 @@
                                     if ($('#tableBody tr').length === 0) {
                                         $('#tableBody').html(`
                                             <tr id="emptyRow">
-                                                <td colspan="4" class="px-6 py-12 text-center">
+                                                <td colspan="5" class="px-6 py-12 text-center">
                                                     <div class="flex flex-col items-center">
                                                         <i class="fas fa-layer-group text-4xl text-gray-300 dark:text-gray-600 mb-3"></i>
                                                         <p class="text-gray-500 dark:text-gray-400 font-medium">No class groups found</p>

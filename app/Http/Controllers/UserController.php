@@ -4,106 +4,288 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Student;
+use App\Models\Teacher;
 use App\Models\ClassGroup;
+use App\Models\Standard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of users.
-     */
     public function index()
     {
         $title = 'Users';
-        $users = User::with(['role', 'classGroup'])->get();
-        $roles = Role::all();
-        $classGroups = ClassGroup::all();
+        $users = User::with([
+            'roles',
+            'student.classGroup',
+            'student.standard',
+            'teacher.classGroup',
+        ])->get();
 
-        return view('pages.users.users_view', compact('title', 'users', 'roles', 'classGroups'));
+        $classGroups = ClassGroup::all();
+        $standards   = Standard::all();
+
+        $studentRole  = Role::where('name', 'Student')->first();
+        $teacherRoles = Role::where('name', 'like', '%Teacher%')->get();
+        $otherRoles   = Role::where('name', 'not like', '%Teacher%')
+            ->where('name', '!=', 'Student')
+            ->get();
+
+        return view('pages.users.users_view', compact(
+            'title', 'users', 'classGroups', 'standards',
+            'studentRole', 'teacherRoles', 'otherRoles'
+        ));
     }
 
-    /**
-     * Store a newly created user.
-     */
+    private function detectType(User $user): string
+    {
+        if ($user->student) return 'student';
+        if ($user->teacher) return 'teacher';
+        return 'other';
+    }
+
+    private function generatePassword(string $name): string
+    {
+        $prefix = strtolower(substr(str_replace(' ', '', $name), 0, 3));
+        return "{$prefix}123";
+    }
+
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+        $type = $request->input('user_type', 'other');
+
+        $commonRules = [
+            'name'  => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
-            'role_id' => ['nullable', 'exists:roles,id'],
-            'class_group_id' => ['nullable', 'exists:class_groups,id'],
-        ]);
+        ];
 
-        $data['password'] = Hash::make($data['password']);
-
-        $user = User::create($data);
-        $user->load(['role', 'classGroup']);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'User created successfully.',
-            'data' => $user,
-        ]);
-    }
-
-    /**
-     * Display the specified user.
-     */
-    public function show(string $id)
-    {
-        $user = User::with(['role', 'classGroup'])->findOrFail($id);
-
-        return response()->json([
-            'success' => true,
-            'data' => $user,
-        ]);
-    }
-
-    /**
-     * Update the specified user.
-     */
-    public function update(Request $request, string $id)
-    {
-        $user = User::findOrFail($id);
-
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email,' . $id],
-            'password' => ['nullable', 'string', 'min:8'],
-            'role_id' => ['nullable', 'exists:roles,id'],
-            'class_group_id' => ['nullable', 'exists:class_groups,id'],
-        ]);
-
-        // Only update password if provided
-        if (!empty($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
+        if ($type === 'student') {
+            $rules = array_merge($commonRules, [
+                'email'          => ['required', 'email', 'unique:users,email', 'unique:students,email'],
+                'admission_no'   => ['required', 'string', 'max:50', 'unique:students,admission_no'],
+                'class_group_id' => ['nullable', 'exists:class_groups,id'],
+                'class_id'       => ['nullable', 'exists:standards,id'],
+            ]);
+        } elseif ($type === 'teacher') {
+            $rules = array_merge($commonRules, [
+                'email'          => ['required', 'email', 'unique:users,email', 'unique:teachers,email'],
+                'role_id'        => ['required', 'exists:roles,id'],
+                'subject'        => ['nullable', 'string', 'max:255'],
+                'class_group_id' => ['nullable', 'exists:class_groups,id'],
+            ]);
         } else {
-            unset($data['password']);
+            $rules = array_merge($commonRules, [
+                'role_id' => ['nullable', 'exists:roles,id'],
+            ]);
         }
 
-        $user->update($data);
-        $user->load(['role', 'classGroup']);
+        $data     = $request->validate($rules);
+        $password = $this->generatePassword($data['name']);
+
+        DB::beginTransaction();
+        try {
+            if ($type === 'student') {
+                $user = User::create([
+                    'name'     => $data['name'],
+                    'email'    => $data['email'],
+                    'password' => Hash::make($password),
+                ]);
+                $user->assignRole('Student');
+
+                Student::create([
+                    'name'           => $data['name'],
+                    'email'          => $data['email'],
+                    'admission_no'   => $data['admission_no'],
+                    'class_group_id' => $data['class_group_id'] ?? null,
+                    'class_id'       => $data['class_id'] ?? null,
+                    'user_id'        => $user->id,
+                ]);
+            } elseif ($type === 'teacher') {
+                $role = Role::findOrFail($data['role_id']);
+                $user = User::create([
+                    'name'     => $data['name'],
+                    'email'    => $data['email'],
+                    'password' => Hash::make($password),
+                ]);
+                $user->assignRole($role->name);
+
+                Teacher::create([
+                    'name'           => $data['name'],
+                    'email'          => $data['email'],
+                    'subject'        => $data['subject'] ?? null,
+                    'class_group_id' => $data['class_group_id'] ?? null,
+                    'user_id'        => $user->id,
+                ]);
+            } else {
+                $user = User::create([
+                    'name'     => $data['name'],
+                    'email'    => $data['email'],
+                    'password' => Hash::make($password),
+                ]);
+                if (!empty($data['role_id'])) {
+                    $role = Role::find($data['role_id']);
+                    if ($role) {
+                        $user->assignRole($role->name);
+                    }
+                }
+            }
+
+            DB::commit();
+            $user->load(['roles', 'student.classGroup', 'student.standard', 'teacher.classGroup']);
+
+            return response()->json([
+                'success' => true,
+                'message' => "User created successfully. Login password: {$password}",
+                'data'    => $user,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create user: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function show(string $id)
+    {
+        $user = User::with([
+            'roles',
+            'student.classGroup',
+            'student.standard',
+            'teacher.classGroup',
+        ])->findOrFail($id);
 
         return response()->json([
-            'success' => true,
-            'message' => 'User updated successfully.',
-            'data' => $user,
+            'success'   => true,
+            'data'      => $user,
+            'user_type' => $this->detectType($user),
         ]);
     }
 
-    /**
-     * Remove the specified user (soft delete).
-     */
+    public function update(Request $request, string $id)
+    {
+        $user = User::with(['student', 'teacher'])->findOrFail($id);
+        $type = $request->input('user_type', $this->detectType($user));
+
+        $commonRules = [
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'email', Rule::unique('users', 'email')->ignore($id)],
+            'password' => ['nullable', 'string', 'min:8'],
+        ];
+
+        if ($type === 'student') {
+            $studentId = $user->student?->id;
+            $rules = array_merge($commonRules, [
+                'email'          => ['required', 'email',
+                    Rule::unique('users', 'email')->ignore($id),
+                    Rule::unique('students', 'email')->ignore($studentId),
+                ],
+                'admission_no'   => ['required', 'string', 'max:50',
+                    Rule::unique('students', 'admission_no')->ignore($studentId),
+                ],
+                'class_group_id' => ['nullable', 'exists:class_groups,id'],
+                'class_id'       => ['nullable', 'exists:standards,id'],
+            ]);
+        } elseif ($type === 'teacher') {
+            $teacherId = $user->teacher?->id;
+            $rules = array_merge($commonRules, [
+                'email'          => ['required', 'email',
+                    Rule::unique('users', 'email')->ignore($id),
+                    Rule::unique('teachers', 'email')->ignore($teacherId),
+                ],
+                'role_id'        => ['required', 'exists:roles,id'],
+                'subject'        => ['nullable', 'string', 'max:255'],
+                'class_group_id' => ['nullable', 'exists:class_groups,id'],
+            ]);
+        } else {
+            $rules = array_merge($commonRules, [
+                'role_id' => ['nullable', 'exists:roles,id'],
+            ]);
+        }
+
+        $data = $request->validate($rules);
+
+        DB::beginTransaction();
+        try {
+            $userUpdate = ['name' => $data['name'], 'email' => $data['email']];
+            if (!empty($data['password'])) {
+                $userUpdate['password'] = Hash::make($data['password']);
+            }
+            $user->update($userUpdate);
+
+            if ($type === 'student') {
+                $user->syncRoles(['Student']);
+                if ($user->student) {
+                    $user->student->update([
+                        'name'           => $data['name'],
+                        'email'          => $data['email'],
+                        'admission_no'   => $data['admission_no'],
+                        'class_group_id' => $data['class_group_id'] ?? null,
+                        'class_id'       => $data['class_id'] ?? null,
+                    ]);
+                }
+            } elseif ($type === 'teacher') {
+                $role = Role::findOrFail($data['role_id']);
+                $user->syncRoles([$role->name]);
+                if ($user->teacher) {
+                    $user->teacher->update([
+                        'name'           => $data['name'],
+                        'email'          => $data['email'],
+                        'subject'        => $data['subject'] ?? null,
+                        'class_group_id' => $data['class_group_id'] ?? null,
+                    ]);
+                }
+            } else {
+                if (!empty($data['role_id'])) {
+                    $role = Role::find($data['role_id']);
+                    $user->syncRoles($role ? [$role->name] : []);
+                } else {
+                    $user->syncRoles([]);
+                }
+            }
+
+            DB::commit();
+            $user->load(['roles', 'student.classGroup', 'student.standard', 'teacher.classGroup']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User updated successfully.',
+                'data'    => $user,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update user: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function destroy(string $id)
     {
-        $user = User::findOrFail($id);
-        $user->delete();
+        $user = User::with(['student', 'teacher'])->findOrFail($id);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'User deleted successfully.',
-        ]);
+        DB::beginTransaction();
+        try {
+            $user->student?->delete();
+            $user->teacher?->delete();
+            $user->delete();
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User deleted successfully.',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete user: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

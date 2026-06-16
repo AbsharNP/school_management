@@ -6,21 +6,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Student extends Model
+class Teacher extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
-        'email',
-        'admission_no',
+        'subject',
         'class_group_id',
-        'class_id',
+        'email',
         'user_id',
     ];
 
     /**
-     * Get the class group that this student belongs to.
+     * Get the class group that this teacher belongs to.
      */
     public function classGroup()
     {
@@ -28,15 +27,7 @@ class Student extends Model
     }
 
     /**
-     * Get the class (standard) that this student belongs to.
-     */
-    public function standard()
-    {
-        return $this->belongsTo(Standard::class, 'class_id');
-    }
-
-    /**
-     * Get the user account associated with this student.
+     * Get the user account associated with this teacher.
      */
     public function user()
     {

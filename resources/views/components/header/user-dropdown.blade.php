@@ -65,6 +65,13 @@
                         </svg>',
                         'path' => '/'
                     ],
+                    [
+                        'text' => 'My Profile',
+                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2a5 5 0 100 10A5 5 0 0012 2zm-3 5a3 3 0 116 0 3 3 0 01-6 0zm-5 13c0-4.418 3.582-8 8-8s8 3.582 8 8a1 1 0 01-2 0 6 6 0 00-12 0 1 1 0 01-2 0z" fill="currentColor"/>
+                        </svg>',
+                        'path' => route('profile.show')
+                    ],
                 ];
             @endphp
 

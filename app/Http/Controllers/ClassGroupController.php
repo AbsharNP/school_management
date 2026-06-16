@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClassGroup;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -14,9 +15,10 @@ class ClassGroupController extends Controller
     public function index()
     {
         $title = 'Class Groups';
-        $classGroups = ClassGroup::all();
+        $classGroups = ClassGroup::with(['headTeacher', 'standards'])->get();
+        $teachers = Teacher::all();
 
-        return view('pages.class_groups.class_groups_view', compact('title', 'classGroups'));
+        return view('pages.class_groups.class_groups_view', compact('title', 'classGroups', 'teachers'));
     }
 
     /**
@@ -25,9 +27,10 @@ class ClassGroupController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255', 
-            Rule::unique('class_groups', 'name')->whereNull('deleted_at'),
+            'name' => ['required', 'string', 'max:255',
+                Rule::unique('class_groups', 'name')->whereNull('deleted_at'),
             ],
+            'head_teacher_id' => ['nullable', 'exists:teachers,id'],
         ]);
 
         $classGroup = ClassGroup::create($data);
@@ -44,7 +47,7 @@ class ClassGroupController extends Controller
      */
     public function show(string $id)
     {
-        $classGroup = ClassGroup::findOrFail($id);
+        $classGroup = ClassGroup::with('headTeacher')->findOrFail($id);
 
         return response()->json([
             'success' => true,
@@ -60,8 +63,10 @@ class ClassGroupController extends Controller
         $classGroup = ClassGroup::findOrFail($id);
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255', 
-                Rule::unique('class_groups', 'name')->whereNull('deleted_at')->ignore($classGroup->id),]
+            'name' => ['required', 'string', 'max:255',
+                Rule::unique('class_groups', 'name')->whereNull('deleted_at')->ignore($classGroup->id),
+            ],
+            'head_teacher_id' => ['nullable', 'exists:teachers,id'],
         ]);
 
         $classGroup->update($data);

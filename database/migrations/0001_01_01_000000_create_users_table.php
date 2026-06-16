@@ -17,8 +17,6 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->foreignId('role_id')->nullable()->constrained('roles')->nullOnDelete();
-            $table->foreignId('class_group_id')->nullable()->constrained('class_groups')->nullOnDelete();
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();
