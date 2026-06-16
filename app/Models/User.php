@@ -15,9 +15,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
-        'class',
-        'class_group',
+        'role_id',
+        'class_group_id',
     ];
 
     protected $hidden = [
@@ -31,5 +30,21 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the role that this user belongs to.
+     */
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    /**
+     * Get the class group that this user belongs to.
+     */
+    public function classGroup()
+    {
+        return $this->belongsTo(ClassGroup::class);
     }
 }
