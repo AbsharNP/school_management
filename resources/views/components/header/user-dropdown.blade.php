@@ -14,7 +14,7 @@
         type="button"
     >
         <span class="mr-3 overflow-hidden rounded-full h-11 w-11">
-            <img src="/images/user/owner.png" alt="User" />
+            <img src="/images/user/user_def.webp" alt="User" />
         </span>
 
        <span class="block mr-1 font-medium text-theme-sm">{{ auth()->user()->name }}</span>
