@@ -9,16 +9,25 @@ use Illuminate\Validation\Rule;
 
 class StandardController extends Controller
 {
-    /**
-     * Display a listing of class.
-     */
     public function index()
     {
-        $title = 'Class Groups';
-        $standard = Standard::all();
-        $classGroups = ClassGroup::all();
+        $user  = auth()->user();
+        $title = 'Classes';
 
-        return view('pages.standard.standard_view', compact('title', 'classGroups','standard'));
+        if ($user->hasAnyRole(['Primary Teacher', 'High School Teacher'])) {
+            $classGroupId = $user->teacher?->class_group_id;
+            $standard    = $classGroupId
+                ? Standard::where('classgroup_id', $classGroupId)->get()
+                : Standard::whereRaw('0 = 1')->get();
+            $classGroups = $classGroupId
+                ? ClassGroup::where('id', $classGroupId)->get()
+                : ClassGroup::whereRaw('0 = 1')->get();
+        } else {
+            $standard    = Standard::all();
+            $classGroups = ClassGroup::all();
+        }
+
+        return view('pages.standard.standard_view', compact('title', 'classGroups', 'standard'));
     }
 
     /**

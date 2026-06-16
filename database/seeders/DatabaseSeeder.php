@@ -49,23 +49,23 @@ class DatabaseSeeder extends Seeder
         $superAdminUser->assignRole('Super Admin');
 
         // ── Class Groups ──────────────────────────────────────────────────────
-        $primaryGrade1   = ClassGroup::create(['name' => 'Primary - Grade 1']);
-        $primaryGrade2   = ClassGroup::create(['name' => 'Primary - Grade 2']);
-        $highSchoolForm1 = ClassGroup::create(['name' => 'High School - Form 1']);
-        $highSchoolForm2 = ClassGroup::create(['name' => 'High School - Form 2']);
+        $primaryGrade1   = ClassGroup::create(['name' => 'Primary - Class 1']);
+        $primaryGrade2   = ClassGroup::create(['name' => 'Primary - Class 2']);
+        $highSchoolForm1 = ClassGroup::create(['name' => 'High School - Class 1']);
+        $highSchoolForm2 = ClassGroup::create(['name' => 'High School - Class 2']);
 
         // ── Standards (classes within each group) ─────────────────────────────
-        $pg1a = Standard::create(['name' => 'Grade 1A', 'classgroup_id' => $primaryGrade1->id]);
-        $pg1b = Standard::create(['name' => 'Grade 1B', 'classgroup_id' => $primaryGrade1->id]);
+        $pg1a = Standard::create(['name' => 'Class 1A', 'classgroup_id' => $primaryGrade1->id]);
+        $pg1b = Standard::create(['name' => 'Class 1B', 'classgroup_id' => $primaryGrade1->id]);
 
-        $pg2a = Standard::create(['name' => 'Grade 2A', 'classgroup_id' => $primaryGrade2->id]);
-        $pg2b = Standard::create(['name' => 'Grade 2B', 'classgroup_id' => $primaryGrade2->id]);
+        $pg2a = Standard::create(['name' => 'Class 2A', 'classgroup_id' => $primaryGrade2->id]);
+        $pg2b = Standard::create(['name' => 'Class 2B', 'classgroup_id' => $primaryGrade2->id]);
 
-        $hs1a = Standard::create(['name' => 'Form 1A', 'classgroup_id' => $highSchoolForm1->id]);
-        $hs1b = Standard::create(['name' => 'Form 1B', 'classgroup_id' => $highSchoolForm1->id]);
+        $hs1a = Standard::create(['name' => 'Class 6A', 'classgroup_id' => $highSchoolForm1->id]);
+        $hs1b = Standard::create(['name' => 'Class 6B', 'classgroup_id' => $highSchoolForm1->id]);
 
-        $hs2a = Standard::create(['name' => 'Form 2A', 'classgroup_id' => $highSchoolForm2->id]);
-        $hs2b = Standard::create(['name' => 'Form 2B', 'classgroup_id' => $highSchoolForm2->id]);
+        $hs2a = Standard::create(['name' => 'Class 8A', 'classgroup_id' => $highSchoolForm2->id]);
+        $hs2b = Standard::create(['name' => 'Class 10B', 'classgroup_id' => $highSchoolForm2->id]);
 
         // ── Teachers ──────────────────────────────────────────────────────────
         $aliceUser = User::factory()->create([

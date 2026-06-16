@@ -49,13 +49,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/class-groups/{id}', [ClassGroupController::class, 'update'])->name('class-groups.update');
         Route::delete('/class-groups/{id}', [ClassGroupController::class, 'destroy'])->name('class-groups.destroy');
 
-        Route::get('/classes', [StandardController::class, 'index'])->name('class.index');
         Route::post('/classes', [StandardController::class, 'store'])->name('class.store');
         Route::get('/classes/{id}', [StandardController::class, 'show'])->name('class.show');
         Route::put('/classes/{id}', [StandardController::class, 'update'])->name('class.update');
         Route::delete('/classes/{id}', [StandardController::class, 'destroy'])->name('class.destroy');
 
-        Route::get('/teachers', [TeacherController::class, 'index'])->name('teachers.index');
         Route::post('/teachers', [TeacherController::class, 'store'])->name('teachers.store');
         Route::get('/teachers/{id}', [TeacherController::class, 'show'])->name('teachers.show');
         Route::put('/teachers/{id}', [TeacherController::class, 'update'])->name('teachers.update');
@@ -65,11 +63,15 @@ Route::middleware('auth')->group(function () {
         Route::delete('/students/{id}', [StudentController::class, 'destroy'])->name('students.destroy');
     });
 
-    // ── Super Admin + Teachers (student management) ───────────────────────────
+    // ── Super Admin + Teachers ────────────────────────────────────────────────
     Route::middleware('role:Super Admin|Primary Teacher|High School Teacher')->group(function () {
         Route::get('/students', [StudentController::class, 'index'])->name('students.index');
         Route::post('/students', [StudentController::class, 'store'])->name('students.store');
         Route::get('/students/{id}', [StudentController::class, 'show'])->name('students.show');
         Route::put('/students/{id}', [StudentController::class, 'update'])->name('students.update');
+
+        // Head teachers can view teachers and classes scoped to their class group
+        Route::get('/teachers', [TeacherController::class, 'index'])->name('teachers.index');
+        Route::get('/classes', [StandardController::class, 'index'])->name('class.index');
     });
 });

@@ -16,7 +16,7 @@ php artisan key:generate
 ```
 
 ```bash
-php artisan migrate:fresh --seed
+php artisan migrate
 ```
 
 ```bash

@@ -27,7 +27,10 @@ class MenuHelper
         if ($user && $user->hasRole('Super Admin')) {
             $items[] = ['icon' => 'teachers',     'name' => 'Teachers',     'path' => '/teachers'];
             $items[] = ['icon' => 'class-groups',  'name' => 'Class Groups', 'path' => '/class-groups'];
-            $items[] = ['icon' => 'class',         'name' => 'Class',        'path' => '/classes'];
+            $items[] = ['icon' => 'class',         'name' => 'Classes',      'path' => '/classes'];
+        } elseif ($user && $user->hasAnyRole(['Primary Teacher', 'High School Teacher'])) {
+            $items[] = ['icon' => 'teachers', 'name' => 'Teachers', 'path' => '/teachers'];
+            $items[] = ['icon' => 'class',    'name' => 'Classes',  'path' => '/classes'];
         }
 
         return $items;

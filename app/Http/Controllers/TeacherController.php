@@ -14,9 +14,21 @@ class TeacherController extends Controller
 {
     public function index()
     {
-        $title    = 'Teachers';
-        $teachers = Teacher::with('classGroup')->get();
-        $classGroups = ClassGroup::all();
+        $user  = auth()->user();
+        $title = 'Teachers';
+
+        if ($user->hasAnyRole(['Primary Teacher', 'High School Teacher'])) {
+            $classGroupId = $user->teacher?->class_group_id;
+            $teachers    = $classGroupId
+                ? Teacher::with('classGroup')->where('class_group_id', $classGroupId)->get()
+                : Teacher::whereRaw('0 = 1')->get();
+            $classGroups = $classGroupId
+                ? ClassGroup::where('id', $classGroupId)->get()
+                : ClassGroup::whereRaw('0 = 1')->get();
+        } else {
+            $teachers    = Teacher::with('classGroup')->get();
+            $classGroups = ClassGroup::all();
+        }
 
         return view('pages.teachers.teachers_view', compact('title', 'teachers', 'classGroups'));
     }
