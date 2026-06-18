@@ -3,42 +3,19 @@
 namespace Database\Seeders;
 
 use App\Models\ClassGroup;
-use App\Models\Role;
 use App\Models\Standard;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Permission;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // ── Permissions ───────────────────────────────────────────────────────
-        $permissions = [
-            'role-list', 'role-create', 'role-edit', 'role-delete',
-            'user-list', 'user-create', 'user-edit', 'user-delete',
-            'student-list', 'student-create', 'student-edit', 'student-delete',
-            'class-list', 'class-create', 'class-edit', 'class-delete',
-        ];
-
-        foreach ($permissions as $perm) {
-            Permission::create(['name' => $perm]);
-        }
-
-        // ── Roles ─────────────────────────────────────────────────────────────
-        $superAdmin = Role::create(['name' => 'Super Admin']);
-        $superAdmin->givePermissionTo(Permission::all());
-
-        $primaryTeacher = Role::create(['name' => 'Primary Teacher']);
-        $primaryTeacher->givePermissionTo(['student-list', 'student-create', 'student-edit']);
-
-        $highSchoolTeacher = Role::create(['name' => 'High School Teacher']);
-        $highSchoolTeacher->givePermissionTo(['student-list', 'student-create', 'student-edit']);
-
-        Role::create(['name' => 'Student']);
+        // Roles + full permission set (idempotent).
+        $this->call(PermissionSeeder::class);
 
         // ── Super Admin user ──────────────────────────────────────────────────
         $superAdminUser = User::factory()->create([

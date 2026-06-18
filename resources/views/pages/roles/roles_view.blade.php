@@ -9,11 +9,13 @@
                         <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Roles</h2>
                         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage system roles and permissions</p>
                     </div>
+                    @can('role-create')
                     <button id="btnCreate"
                         class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium text-sm">
                         <i class="fas fa-plus text-xs"></i>
                         Add Role
                     </button>
+                    @endcan
                 </div>
 
                 <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
@@ -36,16 +38,20 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-right">
                                         <div class="flex items-center justify-end gap-2">
                                             @if($row->id !=1)
+                                            @can('role-edit')
                                             <button type="button"
                                                 class="btn-edit inline-flex items-center justify-center w-9 h-9 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:hover:bg-amber-500/20 transition-colors"
                                                 title="Edit role" data-id="{{ $row->id }}">
                                                 <i class="fas fa-pen-to-square text-sm"></i>
                                             </button>
+                                            @endcan
+                                            @can('role-delete')
                                             <button type="button"
                                                 class="btn-delete inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 transition-colors"
                                                 title="Delete role" data-id="{{ $row->id }}">
                                                 <i class="fas fa-trash-can text-sm"></i>
                                             </button>
+                                            @endcan
                                         @endif
                                         </div>
                                     </td>
@@ -82,7 +88,7 @@
 
         <!-- Modal -->
         <div id="formModal" class="hidden fixed inset-0 z-[99999] flex items-center justify-center p-4">
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
                 <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
                     <h3 id="modalTitle" class="text-lg font-semibold text-gray-800 dark:text-white">Add Role</h3>
                     <button id="btnCloseModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
@@ -100,6 +106,25 @@
                                 class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent px-4 text-sm text-gray-800 dark:text-white placeholder:text-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:bg-gray-900 transition-colors"
                                 placeholder="Enter role name">
                             <p id="nameError" class="mt-1 text-xs text-red-500 hidden"></p>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Permissions</label>
+                                <label class="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
+                                    <input type="checkbox" id="checkAll" class="rounded border-gray-300 text-brand-500 focus:ring-brand-500/20">
+                                    Select all
+                                </label>
+                            </div>
+                            <div class="max-h-56 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 p-3 grid grid-cols-2 gap-2">
+                                @foreach ($permissions as $permission)
+                                    <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                                        <input type="checkbox" name="permissions" value="{{ $permission->name }}"
+                                            class="perm-check rounded border-gray-300 text-brand-500 focus:ring-brand-500/20">
+                                        {{ $permission->name }}
+                                    </label>
+                                @endforeach
+                            </div>
+                            <p id="permissionsError" class="mt-1 text-xs text-red-500 hidden"></p>
                         </div>
                         {{-- <div>
                             <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -180,8 +205,18 @@
             function resetForm() {
                 $('#crudForm')[0].reset();
                 $('#recordId').val('');
+                $('.perm-check').prop('checked', false);
+                $('#checkAll').prop('checked', false);
                 $('.text-red-500.text-xs').addClass('hidden').text('');
             }
+
+            // Select-all permissions toggle
+            $('#checkAll').on('change', function () {
+                $('.perm-check').prop('checked', $(this).is(':checked'));
+            });
+            $(document).on('change', '.perm-check', function () {
+                $('#checkAll').prop('checked', $('.perm-check:not(:checked)').length === 0);
+            });
 
             // Clear validation errors
             function clearErrors() {
@@ -215,7 +250,11 @@
                         if (res.success) {
                             $('#recordId').val(res.data.id);
                             $('#name').val(res.data.name);
-                            // $('#description').val(res.data.description);
+                            $('.perm-check').prop('checked', false);
+                            (res.permissions || []).forEach(function (name) {
+                                $('.perm-check[value="' + name + '"]').prop('checked', true);
+                            });
+                            $('#checkAll').prop('checked', $('.perm-check:not(:checked)').length === 0);
                             openModal('Edit Role');
                         }
                     },
@@ -244,7 +283,9 @@
                     data: {
                         _token: CSRF_TOKEN,
                         name: $('#name').val(),
-                        description: $('#description').val(),
+                        permissions: $('.perm-check:checked').map(function () {
+                            return $(this).val();
+                        }).get(),
                     },
                     success: function (res) {
                         if (res.success) {

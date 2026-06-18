@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ClassGroupController;
 use App\Http\Controllers\StandardController;
 use App\Http\Controllers\StudentController;
@@ -25,53 +26,56 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // ── Profile (all authenticated users) ────────────────────────────────────
+    // Profile — all authenticated users
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
-    // ── Super Admin only ──────────────────────────────────────────────────────
-    Route::middleware('role:Super Admin')->group(function () {
-        Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
-        Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
-        Route::get('/roles/{id}', [RoleController::class, 'show'])->name('roles.show');
-        Route::put('/roles/{id}', [RoleController::class, 'update'])->name('roles.update');
-        Route::delete('/roles/{id}', [RoleController::class, 'destroy'])->name('roles.destroy');
+    // Roles
+    Route::get('/roles', [RoleController::class, 'index'])->middleware('permission:role-list')->name('roles.index');
+    Route::get('/roles/{id}', [RoleController::class, 'show'])->middleware('permission:role-list')->name('roles.show');
+    Route::post('/roles', [RoleController::class, 'store'])->middleware('permission:role-create')->name('roles.store');
+    Route::put('/roles/{id}', [RoleController::class, 'update'])->middleware('permission:role-edit')->name('roles.update');
+    Route::delete('/roles/{id}', [RoleController::class, 'destroy'])->middleware('permission:role-delete')->name('roles.destroy');
 
-        Route::get('/users', [UserController::class, 'index'])->name('users.index');
-        Route::post('/users', [UserController::class, 'store'])->name('users.store');
-        Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
-        Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
-        Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+    // Permissions
+    Route::get('/permissions', [PermissionController::class, 'index'])->middleware('permission:permission-list')->name('permissions.index');
+    Route::get('/permissions/{id}', [PermissionController::class, 'show'])->middleware('permission:permission-list')->name('permissions.show');
+    Route::post('/permissions', [PermissionController::class, 'store'])->middleware('permission:permission-create')->name('permissions.store');
+    Route::put('/permissions/{id}', [PermissionController::class, 'update'])->middleware('permission:permission-edit')->name('permissions.update');
+    Route::delete('/permissions/{id}', [PermissionController::class, 'destroy'])->middleware('permission:permission-delete')->name('permissions.destroy');
 
-        Route::get('/class-groups', [ClassGroupController::class, 'index'])->name('class-groups.index');
-        Route::post('/class-groups', [ClassGroupController::class, 'store'])->name('class-groups.store');
-        Route::get('/class-groups/{id}', [ClassGroupController::class, 'show'])->name('class-groups.show');
-        Route::put('/class-groups/{id}', [ClassGroupController::class, 'update'])->name('class-groups.update');
-        Route::delete('/class-groups/{id}', [ClassGroupController::class, 'destroy'])->name('class-groups.destroy');
+    // Users
+    Route::get('/users', [UserController::class, 'index'])->middleware('permission:user-list')->name('users.index');
+    Route::get('/users/{id}', [UserController::class, 'show'])->middleware('permission:user-list')->name('users.show');
+    Route::post('/users', [UserController::class, 'store'])->middleware('permission:user-create')->name('users.store');
+    Route::put('/users/{id}', [UserController::class, 'update'])->middleware('permission:user-edit')->name('users.update');
+    Route::delete('/users/{id}', [UserController::class, 'destroy'])->middleware('permission:user-delete')->name('users.destroy');
 
-        Route::post('/classes', [StandardController::class, 'store'])->name('class.store');
-        Route::get('/classes/{id}', [StandardController::class, 'show'])->name('class.show');
-        Route::put('/classes/{id}', [StandardController::class, 'update'])->name('class.update');
-        Route::delete('/classes/{id}', [StandardController::class, 'destroy'])->name('class.destroy');
+    // Class Groups
+    Route::get('/class-groups', [ClassGroupController::class, 'index'])->middleware('permission:classgroup-list')->name('class-groups.index');
+    Route::get('/class-groups/{id}', [ClassGroupController::class, 'show'])->middleware('permission:classgroup-list')->name('class-groups.show');
+    Route::post('/class-groups', [ClassGroupController::class, 'store'])->middleware('permission:classgroup-create')->name('class-groups.store');
+    Route::put('/class-groups/{id}', [ClassGroupController::class, 'update'])->middleware('permission:classgroup-edit')->name('class-groups.update');
+    Route::delete('/class-groups/{id}', [ClassGroupController::class, 'destroy'])->middleware('permission:classgroup-delete')->name('class-groups.destroy');
 
-        Route::post('/teachers', [TeacherController::class, 'store'])->name('teachers.store');
-        Route::get('/teachers/{id}', [TeacherController::class, 'show'])->name('teachers.show');
-        Route::put('/teachers/{id}', [TeacherController::class, 'update'])->name('teachers.update');
-        Route::delete('/teachers/{id}', [TeacherController::class, 'destroy'])->name('teachers.destroy');
+    // Classes (Standards)
+    Route::get('/classes', [StandardController::class, 'index'])->middleware('permission:class-list')->name('class.index');
+    Route::get('/classes/{id}', [StandardController::class, 'show'])->middleware('permission:class-list')->name('class.show');
+    Route::post('/classes', [StandardController::class, 'store'])->middleware('permission:class-create')->name('class.store');
+    Route::put('/classes/{id}', [StandardController::class, 'update'])->middleware('permission:class-edit')->name('class.update');
+    Route::delete('/classes/{id}', [StandardController::class, 'destroy'])->middleware('permission:class-delete')->name('class.destroy');
 
-        // Only Super Admin can delete students
-        Route::delete('/students/{id}', [StudentController::class, 'destroy'])->name('students.destroy');
-    });
+    // Teachers
+    Route::get('/teachers', [TeacherController::class, 'index'])->middleware('permission:teacher-list')->name('teachers.index');
+    Route::get('/teachers/{id}', [TeacherController::class, 'show'])->middleware('permission:teacher-list')->name('teachers.show');
+    Route::post('/teachers', [TeacherController::class, 'store'])->middleware('permission:teacher-create')->name('teachers.store');
+    Route::put('/teachers/{id}', [TeacherController::class, 'update'])->middleware('permission:teacher-edit')->name('teachers.update');
+    Route::delete('/teachers/{id}', [TeacherController::class, 'destroy'])->middleware('permission:teacher-delete')->name('teachers.destroy');
 
-    // ── Super Admin + Teachers ────────────────────────────────────────────────
-    Route::middleware('role:Super Admin|Primary Teacher|High School Teacher')->group(function () {
-        Route::get('/students', [StudentController::class, 'index'])->name('students.index');
-        Route::post('/students', [StudentController::class, 'store'])->name('students.store');
-        Route::get('/students/{id}', [StudentController::class, 'show'])->name('students.show');
-        Route::put('/students/{id}', [StudentController::class, 'update'])->name('students.update');
-
-        // Head teachers can view teachers and classes scoped to their class group
-        Route::get('/teachers', [TeacherController::class, 'index'])->name('teachers.index');
-        Route::get('/classes', [StandardController::class, 'index'])->name('class.index');
-    });
+    // Students — permission-gated (WHAT); class-group scoping (WHICH) lives in the controller + policy
+    Route::get('/students', [StudentController::class, 'index'])->middleware('permission:student-list')->name('students.index');
+    Route::get('/students/{id}', [StudentController::class, 'show'])->middleware('permission:student-list')->name('students.show');
+    Route::post('/students', [StudentController::class, 'store'])->middleware('permission:student-create')->name('students.store');
+    Route::put('/students/{id}', [StudentController::class, 'update'])->middleware('permission:student-edit')->name('students.update');
+    Route::delete('/students/{id}', [StudentController::class, 'destroy'])->middleware('permission:student-delete')->name('students.destroy');
 });

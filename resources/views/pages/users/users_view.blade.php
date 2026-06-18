@@ -9,11 +9,13 @@
                         <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Users</h2>
                         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage system users and their access</p>
                     </div>
+                    @can('user-create')
                     <button id="btnCreate"
                         class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium text-sm">
                         <i class="fas fa-plus text-xs"></i>
                         Add User
                     </button>
+                    @endcan
                 </div>
 
                 <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
@@ -59,9 +61,6 @@
                                                 @if($row->student->classGroup)
                                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">{{ $row->student->classGroup->name }}</span>
                                                 @endif
-                                                @if($row->student->standard)
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-400">{{ $row->student->standard->name }}</span>
-                                                @endif
                                             </div>
                                         @elseif($userType === 'teacher')
                                             <div class="flex flex-wrap items-center gap-1.5">
@@ -82,16 +81,20 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right">
                                         <div class="flex items-center justify-end gap-2">
+                                            @can('user-edit')
                                             <button type="button"
                                                 class="btn-edit inline-flex items-center justify-center w-9 h-9 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:hover:bg-amber-500/20 transition-colors"
                                                 title="Edit user" data-id="{{ $row->id }}">
                                                 <i class="fas fa-pen-to-square text-sm"></i>
                                             </button>
+                                            @endcan
+                                            @can('user-delete')
                                             <button type="button"
                                                 class="btn-delete inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 transition-colors"
                                                 title="Delete user" data-id="{{ $row->id }}">
                                                 <i class="fas fa-trash-can text-sm"></i>
                                             </button>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>
@@ -139,13 +142,12 @@
 
                     <div class="p-6 space-y-5">
 
-                        {{-- User Type Selector --}}
+                        {{-- User type selector --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 User Type <span class="text-red-500">*</span>
                             </label>
                             <div id="typeSelectorWrap" class="grid grid-cols-3 gap-3">
-                                {{-- Student --}}
                                 <label class="cursor-pointer">
                                     <input type="radio" name="user_type_radio" value="student" class="peer sr-only">
                                     <div class="border-2 rounded-xl p-3 text-center transition-all duration-200
@@ -157,7 +159,6 @@
                                         <span class="text-xs font-semibold">Student</span>
                                     </div>
                                 </label>
-                                {{-- Teacher --}}
                                 <label class="cursor-pointer">
                                     <input type="radio" name="user_type_radio" value="teacher" class="peer sr-only">
                                     <div class="border-2 rounded-xl p-3 text-center transition-all duration-200
@@ -169,7 +170,6 @@
                                         <span class="text-xs font-semibold">Teacher</span>
                                     </div>
                                 </label>
-                                {{-- Employee --}}
                                 <label class="cursor-pointer">
                                     <input type="radio" name="user_type_radio" value="other" class="peer sr-only" checked>
                                     <div class="border-2 rounded-xl p-3 text-center transition-all duration-200
@@ -184,7 +184,7 @@
                             </div>
                         </div>
 
-                        {{-- Common: Name + Email --}}
+                        {{-- Name + email --}}
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -225,13 +225,13 @@
                             </p>
                         </div>
 
-                        {{-- Student Section --}}
+                        {{-- Student section --}}
                         <div id="studentSection" class="hidden">
                             <div class="rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 p-4 space-y-4">
                                 <p class="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
                                     <i class="fas fa-user-graduate"></i> Student Details
                                 </p>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label for="admission_no" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                                             Admission No. <span class="text-red-500">*</span>
@@ -254,52 +254,24 @@
                                         </select>
                                         <p id="s_class_group_idError" class="mt-1 text-xs text-red-500 hidden"></p>
                                     </div>
-                                    <div>
-                                        <label for="s_class_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                            Class
-                                        </label>
-                                        <select id="s_class_id"
-                                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 text-sm text-gray-800 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors">
-                                            <option value="">Select class</option>
-                                            @foreach ($standards as $standard)
-                                                <option value="{{ $standard->id }}" data-group="{{ $standard->classgroup_id }}">{{ $standard->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <p id="s_class_idError" class="mt-1 text-xs text-red-500 hidden"></p>
-                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Teacher Section --}}
+                        {{-- Teacher section --}}
                         <div id="teacherSection" class="hidden">
                             <div class="rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-100 dark:border-green-500/20 p-4 space-y-4">
                                 <p class="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wider flex items-center gap-1.5">
                                     <i class="fas fa-chalkboard-teacher"></i> Teacher Details
                                 </p>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                            Subject
-                                        </label>
-                                        <input type="text" id="subject" name="subject"
-                                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 text-sm text-gray-800 dark:text-white placeholder:text-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-colors"
-                                            placeholder="e.g. Mathematics">
-                                        <p id="subjectError" class="mt-1 text-xs text-red-500 hidden"></p>
-                                    </div>
-                                    <div>
-                                        <label for="t_class_group_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                            Class Group
-                                        </label>
-                                        <select id="t_class_group_id"
-                                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 text-sm text-gray-800 dark:text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-colors">
-                                            <option value="">Select class group</option>
-                                            @foreach ($classGroups as $group)
-                                                <option value="{{ $group->id }}">{{ $group->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <p id="t_class_group_idError" class="mt-1 text-xs text-red-500 hidden"></p>
-                                    </div>
+                                <div>
+                                    <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                        Subject
+                                    </label>
+                                    <input type="text" id="subject" name="subject"
+                                        class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 text-sm text-gray-800 dark:text-white placeholder:text-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-colors"
+                                        placeholder="e.g. Mathematics">
+                                    <p id="subjectError" class="mt-1 text-xs text-red-500 hidden"></p>
                                 </div>
                                 <div>
                                     <label for="t_role_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -324,7 +296,7 @@
                             </div>
                         </div>
 
-                        {{-- Employee Section --}}
+                        {{-- Employee section --}}
                         <div id="otherSection">
                             <div class="rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-100 dark:border-purple-500/20 p-4 space-y-4">
                                 <p class="text-xs font-semibold text-purple-700 dark:text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -367,15 +339,10 @@
 
 @push('scripts')
     <script>
-        const allStandards = @json($standards->map(function($s) {
-            return ['id' => $s->id, 'name' => $s->name, 'classgroup_id' => $s->classgroup_id];
-        }));
-
         $(document).ready(function () {
             const CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
             const BASE_URL = '/users';
 
-            // ── Toast ──────────────────────────────────────────────────────────
             function showToast(message, type = 'success') {
                 const toast = $('#toast');
                 toast.removeClass('hidden bg-green-500 bg-red-500 translate-x-full opacity-0');
@@ -389,35 +356,11 @@
                 }, 3000);
             }
 
-            // ── Class options (student section) ────────────────────────────────
-            function updateClassOptions(groupId, selectedId) {
-                const filtered = groupId
-                    ? allStandards.filter(s => s.classgroup_id == groupId)
-                    : allStandards;
-                let html = '<option value="">Select class</option>';
-                filtered.forEach(function (s) {
-                    const sel = (selectedId && s.id == selectedId) ? 'selected' : '';
-                    html += `<option value="${s.id}" ${sel}>${s.name}</option>`;
-                });
-                $('#s_class_id').html(html);
-            }
-
-            $('#s_class_group_id').on('change', function () {
-                updateClassOptions($(this).val(), null);
-            });
-
-            // ── Type switching ─────────────────────────────────────────────────
             function switchType(type) {
                 $('#userType').val(type);
                 $('input[name="user_type_radio"][value="' + type + '"]').prop('checked', true);
                 $('#studentSection, #teacherSection, #otherSection').addClass('hidden');
-                if (type === 'student') {
-                    $('#studentSection').removeClass('hidden');
-                } else if (type === 'teacher') {
-                    $('#teacherSection').removeClass('hidden');
-                } else {
-                    $('#otherSection').removeClass('hidden');
-                }
+                $('#' + type + 'Section').removeClass('hidden');
                 clearErrors();
             }
 
@@ -427,7 +370,6 @@
                 }
             });
 
-            // ── Modal open / close ─────────────────────────────────────────────
             function openModal(title, isEdit) {
                 $('#modalTitle').text(title);
                 if (isEdit) {
@@ -455,11 +397,9 @@
                 $('#recordId').val('');
                 $('input[name="user_type_radio"]').prop('disabled', false);
                 switchType('other');
-                updateClassOptions('', null);
                 clearErrors();
             }
 
-            // ── Error helpers ──────────────────────────────────────────────────
             function clearErrors() {
                 $('[id$="Error"]').addClass('hidden').text('');
             }
@@ -468,8 +408,8 @@
                 clearErrors();
                 const type = $('#userType').val();
                 const fieldMap = {
-                    student: { class_group_id: 's_class_group_idError', class_id: 's_class_idError' },
-                    teacher: { class_group_id: 't_class_group_idError', role_id: 't_role_idError' },
+                    student: { class_group_id: 's_class_group_idError' },
+                    teacher: { role_id: 't_role_idError' },
                     other:   { role_id: 'o_role_idError' },
                 };
                 $.each(errors, function (field, messages) {
@@ -479,7 +419,6 @@
                 });
             }
 
-            // ── Create ─────────────────────────────────────────────────────────
             $('#btnCreate').on('click', function () {
                 resetForm();
                 openModal('Add User', false);
@@ -487,40 +426,36 @@
 
             $('#btnCloseModal, #btnCancel, #modalBackdrop').on('click', closeModal);
 
-            // ── Edit ───────────────────────────────────────────────────────────
             $(document).on('click', '.btn-edit', function () {
                 const id = $(this).data('id');
                 $.ajax({
                     url: BASE_URL + '/' + id,
                     type: 'GET',
                     success: function (res) {
-                        if (res.success) {
-                            const d    = res.data;
-                            const type = res.user_type;
+                        if (!res.success) return;
 
-                            $('#recordId').val(d.id);
-                            $('#name').val(d.name);
-                            $('#email').val(d.email);
-                            $('#password').val('');
+                        const d    = res.data;
+                        const type = res.user_type;
 
-                            // Switch type and lock radios
-                            switchType(type);
-                            $('input[name="user_type_radio"]').prop('disabled', true);
+                        $('#recordId').val(d.id);
+                        $('#name').val(d.name);
+                        $('#email').val(d.email);
+                        $('#password').val('');
 
-                            if (type === 'student' && d.student) {
-                                $('#admission_no').val(d.student.admission_no);
-                                $('#s_class_group_id').val(d.student.class_group_id);
-                                updateClassOptions(d.student.class_group_id, d.student.class_id);
-                            } else if (type === 'teacher' && d.teacher) {
-                                $('#subject').val(d.teacher.subject);
-                                $('#t_class_group_id').val(d.teacher.class_group_id);
-                                $('#t_role_id').val(d.roles?.[0]?.id);
-                            } else {
-                                $('#o_role_id').val(d.roles?.[0]?.id);
-                            }
+                        switchType(type);
+                        $('input[name="user_type_radio"]').prop('disabled', true);
 
-                            openModal('Edit User', true);
+                        if (type === 'student' && d.student) {
+                            $('#admission_no').val(d.student.admission_no);
+                            $('#s_class_group_id').val(d.student.class_group_id);
+                        } else if (type === 'teacher' && d.teacher) {
+                            $('#subject').val(d.teacher.subject);
+                            $('#t_role_id').val(d.roles?.[0]?.id);
+                        } else {
+                            $('#o_role_id').val(d.roles?.[0]?.id);
                         }
+
+                        openModal('Edit User', true);
                     },
                     error: function () {
                         showToast('Failed to load user data.', 'error');
@@ -528,7 +463,6 @@
                 });
             });
 
-            // ── Submit ─────────────────────────────────────────────────────────
             $('#crudForm').on('submit', function (e) {
                 e.preventDefault();
                 clearErrors();
@@ -549,7 +483,6 @@
                     email:     $('#email').val(),
                 };
 
-                // Only include password on edit (it's auto-generated on create)
                 if (isEdit) {
                     const pwd = $('#password').val();
                     if (pwd) formData.password = pwd;
@@ -558,11 +491,9 @@
                 if (type === 'student') {
                     formData.admission_no   = $('#admission_no').val();
                     formData.class_group_id = $('#s_class_group_id').val();
-                    formData.class_id       = $('#s_class_id').val();
                 } else if (type === 'teacher') {
-                    formData.subject        = $('#subject').val();
-                    formData.class_group_id = $('#t_class_group_id').val();
-                    formData.role_id        = $('#t_role_id').val();
+                    formData.subject = $('#subject').val();
+                    formData.role_id = $('#t_role_id').val();
                 } else {
                     formData.role_id = $('#o_role_id').val();
                 }
@@ -592,40 +523,39 @@
                 });
             });
 
-            // ── Delete ─────────────────────────────────────────────────────────
             $(document).on('click', '.btn-delete', function () {
                 const id  = $(this).data('id');
                 const row = $(this).closest('tr');
-                if (confirm('Are you sure you want to delete this user? Associated student/teacher record will also be removed.')) {
-                    $.ajax({
-                        url:  BASE_URL + '/' + id,
-                        type: 'DELETE',
-                        data: { _token: CSRF_TOKEN },
-                        success: function (res) {
-                            if (res.success) {
-                                showToast(res.message);
-                                row.fadeOut(300, function () {
-                                    $(this).remove();
-                                    if ($('#tableBody tr').length === 0) {
-                                        $('#tableBody').html(`
-                                            <tr id="emptyRow">
-                                                <td colspan="6" class="px-6 py-12 text-center">
-                                                    <div class="flex flex-col items-center">
-                                                        <i class="fas fa-users text-4xl text-gray-300 dark:text-gray-600 mb-3"></i>
-                                                        <p class="text-gray-500 dark:text-gray-400 font-medium">No users found</p>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        `);
-                                    }
-                                });
-                            }
-                        },
-                        error: function () {
-                            showToast('Failed to delete user.', 'error');
+                if (!confirm('Are you sure you want to delete this user? Associated student/teacher record will also be removed.')) return;
+
+                $.ajax({
+                    url:  BASE_URL + '/' + id,
+                    type: 'DELETE',
+                    data: { _token: CSRF_TOKEN },
+                    success: function (res) {
+                        if (res.success) {
+                            showToast(res.message);
+                            row.fadeOut(300, function () {
+                                $(this).remove();
+                                if ($('#tableBody tr').length === 0) {
+                                    $('#tableBody').html(`
+                                        <tr id="emptyRow">
+                                            <td colspan="6" class="px-6 py-12 text-center">
+                                                <div class="flex flex-col items-center">
+                                                    <i class="fas fa-users text-4xl text-gray-300 dark:text-gray-600 mb-3"></i>
+                                                    <p class="text-gray-500 dark:text-gray-400 font-medium">No users found</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `);
+                                }
+                            });
                         }
-                    });
-                }
+                    },
+                    error: function () {
+                        showToast('Failed to delete user.', 'error');
+                    }
+                });
             });
         });
     </script>

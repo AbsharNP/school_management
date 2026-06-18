@@ -7,7 +7,6 @@ use App\Models\Role;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\ClassGroup;
-use App\Models\Standard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -18,25 +17,16 @@ class UserController extends Controller
     public function index()
     {
         $title = 'Users';
-        $users = User::with([
-            'roles',
-            'student.classGroup',
-            'student.standard',
-            'teacher.classGroup',
-        ])->get();
+        $users = User::with(['roles', 'student.classGroup', 'teacher.classGroup'])->get();
 
-        $classGroups = ClassGroup::all();
-        $standards   = Standard::all();
-
-        $studentRole  = Role::where('name', 'Student')->first();
+        $classGroups  = ClassGroup::all();
         $teacherRoles = Role::where('name', 'like', '%Teacher%')->get();
         $otherRoles   = Role::where('name', 'not like', '%Teacher%')
             ->where('name', '!=', 'Student')
             ->get();
 
         return view('pages.users.users_view', compact(
-            'title', 'users', 'classGroups', 'standards',
-            'studentRole', 'teacherRoles', 'otherRoles'
+            'title', 'users', 'classGroups', 'teacherRoles', 'otherRoles'
         ));
     }
 
@@ -67,14 +57,12 @@ class UserController extends Controller
                 'email'          => ['required', 'email', 'unique:users,email', 'unique:students,email'],
                 'admission_no'   => ['required', 'string', 'max:50', 'unique:students,admission_no'],
                 'class_group_id' => ['nullable', 'exists:class_groups,id'],
-                'class_id'       => ['nullable', 'exists:standards,id'],
             ]);
         } elseif ($type === 'teacher') {
             $rules = array_merge($commonRules, [
-                'email'          => ['required', 'email', 'unique:users,email', 'unique:teachers,email'],
-                'role_id'        => ['required', 'exists:roles,id'],
-                'subject'        => ['nullable', 'string', 'max:255'],
-                'class_group_id' => ['nullable', 'exists:class_groups,id'],
+                'email'   => ['required', 'email', 'unique:users,email', 'unique:teachers,email'],
+                'role_id' => ['required', 'exists:roles,id'],
+                'subject' => ['nullable', 'string', 'max:255'],
             ]);
         } else {
             $rules = array_merge($commonRules, [
@@ -100,7 +88,6 @@ class UserController extends Controller
                     'email'          => $data['email'],
                     'admission_no'   => $data['admission_no'],
                     'class_group_id' => $data['class_group_id'] ?? null,
-                    'class_id'       => $data['class_id'] ?? null,
                     'user_id'        => $user->id,
                 ]);
             } elseif ($type === 'teacher') {
@@ -113,11 +100,10 @@ class UserController extends Controller
                 $user->assignRole($role->name);
 
                 Teacher::create([
-                    'name'           => $data['name'],
-                    'email'          => $data['email'],
-                    'subject'        => $data['subject'] ?? null,
-                    'class_group_id' => $data['class_group_id'] ?? null,
-                    'user_id'        => $user->id,
+                    'name'    => $data['name'],
+                    'email'   => $data['email'],
+                    'subject' => $data['subject'] ?? null,
+                    'user_id' => $user->id,
                 ]);
             } else {
                 $user = User::create([
@@ -134,7 +120,7 @@ class UserController extends Controller
             }
 
             DB::commit();
-            $user->load(['roles', 'student.classGroup', 'student.standard', 'teacher.classGroup']);
+            $user->load(['roles', 'student.classGroup', 'teacher.classGroup']);
 
             return response()->json([
                 'success' => true,
@@ -152,12 +138,7 @@ class UserController extends Controller
 
     public function show(string $id)
     {
-        $user = User::with([
-            'roles',
-            'student.classGroup',
-            'student.standard',
-            'teacher.classGroup',
-        ])->findOrFail($id);
+        $user = User::with(['roles', 'student.classGroup', 'teacher.classGroup'])->findOrFail($id);
 
         return response()->json([
             'success'   => true,
@@ -188,18 +169,16 @@ class UserController extends Controller
                     Rule::unique('students', 'admission_no')->ignore($studentId),
                 ],
                 'class_group_id' => ['nullable', 'exists:class_groups,id'],
-                'class_id'       => ['nullable', 'exists:standards,id'],
             ]);
         } elseif ($type === 'teacher') {
             $teacherId = $user->teacher?->id;
             $rules = array_merge($commonRules, [
-                'email'          => ['required', 'email',
+                'email'   => ['required', 'email',
                     Rule::unique('users', 'email')->ignore($id),
                     Rule::unique('teachers', 'email')->ignore($teacherId),
                 ],
-                'role_id'        => ['required', 'exists:roles,id'],
-                'subject'        => ['nullable', 'string', 'max:255'],
-                'class_group_id' => ['nullable', 'exists:class_groups,id'],
+                'role_id' => ['required', 'exists:roles,id'],
+                'subject' => ['nullable', 'string', 'max:255'],
             ]);
         } else {
             $rules = array_merge($commonRules, [
@@ -225,7 +204,6 @@ class UserController extends Controller
                         'email'          => $data['email'],
                         'admission_no'   => $data['admission_no'],
                         'class_group_id' => $data['class_group_id'] ?? null,
-                        'class_id'       => $data['class_id'] ?? null,
                     ]);
                 }
             } elseif ($type === 'teacher') {
@@ -233,10 +211,9 @@ class UserController extends Controller
                 $user->syncRoles([$role->name]);
                 if ($user->teacher) {
                     $user->teacher->update([
-                        'name'           => $data['name'],
-                        'email'          => $data['email'],
-                        'subject'        => $data['subject'] ?? null,
-                        'class_group_id' => $data['class_group_id'] ?? null,
+                        'name'    => $data['name'],
+                        'email'   => $data['email'],
+                        'subject' => $data['subject'] ?? null,
                     ]);
                 }
             } else {
@@ -249,7 +226,7 @@ class UserController extends Controller
             }
 
             DB::commit();
-            $user->load(['roles', 'student.classGroup', 'student.standard', 'teacher.classGroup']);
+            $user->load(['roles', 'student.classGroup', 'teacher.classGroup']);
 
             return response()->json([
                 'success' => true,

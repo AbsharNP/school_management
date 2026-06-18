@@ -46,16 +46,20 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right">
                                         <div class="flex items-center justify-end gap-2">
+                                            @can('teacher-edit')
                                             <button type="button"
                                                 class="btn-edit inline-flex items-center justify-center w-9 h-9 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:hover:bg-amber-500/20 transition-colors"
                                                 title="Edit teacher" data-id="{{ $row->id }}">
                                                 <i class="fas fa-pen-to-square text-sm"></i>
                                             </button>
+                                            @endcan
+                                            @can('teacher-delete')
                                             <button type="button"
                                                 class="btn-delete inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 transition-colors"
                                                 title="Delete teacher" data-id="{{ $row->id }}">
                                                 <i class="fas fa-trash-can text-sm"></i>
                                             </button>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

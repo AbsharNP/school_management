@@ -9,11 +9,13 @@
                         <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Class Groups</h2>
                         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage class groups and sections</p>
                     </div>
+                    @can('class-create')
                     <button id="btnCreate"
                         class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium text-sm">
                         <i class="fas fa-plus text-xs"></i>
                         Add Class Group
                     </button>
+                    @endcan
                 </div>
 
                 <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
@@ -35,16 +37,20 @@
                                     <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ $row->classGroup->name ?? '—' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right">
                                         <div class="flex items-center justify-end gap-2">
+                                            @can('class-edit')
                                             <button type="button"
                                                 class="btn-edit inline-flex items-center justify-center w-9 h-9 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:hover:bg-amber-500/20 transition-colors"
                                                 title="Edit class group" data-id="{{ $row->id }}">
                                                 <i class="fas fa-pen-to-square text-sm"></i>
                                             </button>
+                                            @endcan
+                                            @can('class-delete')
                                             <button type="button"
                                                 class="btn-delete inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 transition-colors"
                                                 title="Delete class group" data-id="{{ $row->id }}">
                                                 <i class="fas fa-trash-can text-sm"></i>
                                             </button>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

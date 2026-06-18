@@ -26,6 +26,16 @@ class StudentController extends Controller
                 : $query->whereRaw('0 = 1');
         }
 
+        // Search by name, admission number or email (applied within the user's scope).
+        $search = trim((string) request('search', ''));
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('admission_no', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
         $students    = $query->get();
         $classGroups = $this->allowedClassGroups($user);
         $standards   = Standard::when(
@@ -33,7 +43,7 @@ class StudentController extends Controller
             fn($q) => $q->where('classgroup_id', $user->teacher?->class_group_id)
         )->get();
 
-        return view('pages.students.students_view', compact('title', 'students', 'classGroups', 'standards'));
+        return view('pages.students.students_view', compact('title', 'students', 'classGroups', 'standards', 'search'));
     }
 
     private function generatePassword(string $name): string
