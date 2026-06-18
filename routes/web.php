@@ -72,7 +72,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/teachers/{id}', [TeacherController::class, 'update'])->middleware('permission:teacher-edit')->name('teachers.update');
     Route::delete('/teachers/{id}', [TeacherController::class, 'destroy'])->middleware('permission:teacher-delete')->name('teachers.destroy');
 
-    // Students — permission-gated (WHAT); class-group scoping (WHICH) lives in the controller + policy
+    // Students 
     Route::get('/students', [StudentController::class, 'index'])->middleware('permission:student-list')->name('students.index');
     Route::get('/students/{id}', [StudentController::class, 'show'])->middleware('permission:student-list')->name('students.show');
     Route::post('/students', [StudentController::class, 'store'])->middleware('permission:student-create')->name('students.store');
