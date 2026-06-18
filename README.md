@@ -26,6 +26,12 @@ composer run dev
 App runs at `http://127.0.0.1:8000`
 
 ---
+## password auto generation
+
+    user_name = Abshar
+    '1st three letters of user_name' + '123'
+    password  = abs123
+
 
 ## Login Credentials
 
